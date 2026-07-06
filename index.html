@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Concentration & Segregation Explorer</title>
+<title>Concentration &amp; Segregation Explorer</title>
 <style>
 :root{
   --color-background-primary:#ffffff;
@@ -36,6 +36,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#534ab7;cursor:pointer;border:none}
 input[type=range]:disabled{opacity:.4}
 b{font-weight:500}
+.panel-note{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -43,15 +44,68 @@ b{font-weight:500}
 <h1>Concentration &amp; Segregation Explorer</h1>
 <p class="intro">Two artifacts in measured online segregation. Top: how concentrated activity plus a homophily gap between super-sharers and the general population inflates volume-weighted segregation. Bottom: how a high sources-to-users ratio inflates every metric toward its ceiling. Drag any control; everything recomputes live.</p>
 
+
+<details style="margin-bottom:2rem; border:1px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:0;">
+  <summary style="cursor:pointer; padding:.75rem 1rem; font-size:14px; font-weight:500; list-style:none; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+    <span>&#9432; How it works &mdash; methodology</span>
+    <span style="font-size:11px; color:var(--color-text-tertiary); font-weight:400;">click to expand</span>
+  </summary>
+  <div style="padding:.75rem 1rem 1rem; font-size:13px; color:var(--color-text-secondary); border-top:1px solid var(--color-border-tertiary);">
+
+    <p style="margin:.5rem 0 .25rem; font-weight:500; color:var(--color-text-primary);">Segregation metric: Theil H</p>
+    <p style="margin:0 0 .75rem;">Theil H measures how much knowing which source someone visited reduces uncertainty about their demographic group. Formally:</p>
+    <p style="margin:0 0 .75rem; background:var(--color-background-secondary); padding:.5rem .75rem; border-radius:6px; font-size:13px; line-height:2;">
+      H / H<sub>max</sub> &nbsp;=&nbsp;
+      <span style="font-size:16px;">&Sigma;</span><sub>u</sub> &nbsp;
+      (n<sub>u</sub> / N) &nbsp;&times;&nbsp;
+      <span style="font-size:16px;">&Sigma;</span><sub>g</sub> &nbsp;
+      (n<sub>ug</sub> / n<sub>u</sub>) &nbsp;&times;&nbsp;
+      ln [ (n<sub>ug</sub> / n<sub>u</sub>) / &pi;<sub>g</sub> ]
+      &nbsp;&nbsp;/&nbsp;&nbsp;
+      &minus;<span style="font-size:16px;">&Sigma;</span><sub>g</sub> &nbsp;
+      &pi;<sub>g</sub> &nbsp;ln &pi;<sub>g</sub>
+    </p>
+    <p style="margin:0 0 .75rem;">where n&#x1D462; is traffic at source u, n&#x1D462;&#x261;&#x20D7; is traffic from group g at source u, and &pi;&#x261;&#x20D7; is the population share of group g. H = 0 means all sources have identical audience composition. H = 1 means each source is visited exclusively by one group.</p>
+
+    <p style="margin:.5rem 0 .25rem; font-weight:500; color:var(--color-text-primary);">Weighting artifact (top panel)</p>
+    <p style="margin:0 0 .75rem;"><b>Volume weighting</b> counts every click equally, so heavy users dominate. <b>Person weighting</b> normalizes each user to contribute equally regardless of activity level. The gap between them is:</p>
+    <p style="margin:0 0 .75rem; background:var(--color-background-secondary); padding:.5rem .75rem; border-radius:6px; font-size:13px; line-height:2;">
+      gap &nbsp;=&nbsp; H<sub>vol</sub> &minus; H<sub>per</sub> &nbsp;&asymp;&nbsp;
+      N &nbsp;&times;&nbsp; Cov( activity share<sub>i</sub> , sortedness<sub>i</sub> )
+    </p>
+    <p style="margin:0 0 .75rem;">The gap is nonzero only when activity is concentrated AND heavy users are more sorted than typical users. Concentration alone produces no gap if heavy and light users are equally sorted.</p>
+    <p style="margin:0 0 .75rem;">The simulation draws an activity level for each of the 2,000 users from the chosen distribution. Users are then ranked by activity: the top X% (the super-sharer fraction) receive homophily H<sub>S</sub> and the rest receive H<sub>G</sub>. For each visit, a random draw determines whether the user visits a same-group domain (with probability H) or any domain chosen uniformly at random (with probability 1&minus;H). Super-sharers are assigned by activity rank, so both Democrats and Republicans can be super-sharers.</p>
+    <p style="margin:0 0 .75rem; background:var(--color-background-secondary); padding:.4rem .65rem; border-radius:6px; font-size:12px; color:var(--color-text-secondary); border-left: 3px solid var(--color-border-secondary);">
+    <b>Simulation note.</b> All three metrics (Theil H, GS S, Dissimilarity D) are computed from a full simulation:
+    2,000 users, S/N&thinsp;=&thinsp;0.1 (safe zone, negligible fragmentation), mean 18 visits per user.
+    Volume weighting counts each visit as 1; person weighting gives each visit weight 1/v<sub>i</sub> so every user
+    contributes equally. Domains are split equally between groups (binary partisan structure), so absolute
+    levels are an upper bound relative to real mixed-audience domains. The gap is a simulated result.
+    </p>
+
+    <p style="margin:.5rem 0 .25rem; font-weight:500; color:var(--color-text-primary);">Fragmentation artifact (bottom panel)</p>
+    <p style="margin:0 0 .75rem;">When sources outnumber users (S/N &gt; 1), most sources receive a single visitor and appear perfectly segregated by construction, regardless of true partisan sorting. The metric inflates toward 1 as S/N rises. The simulation holds homophily fixed and varies the number of sources, showing how the person-weighted Theil departs from the true underlying level as S/N grows.</p>
+    <p style="margin:0 0 .75rem;">Simulated with 3,000 users. The qualitative shape (inflation above S/N = 1) is robust; absolute levels depend on panel size and activity distribution.</p>
+
+    <p style="margin:.5rem 0 .25rem; font-weight:500; color:var(--color-text-primary);">Distribution calibration</p>
+    <p style="margin:0 0 .75rem;">The concentration slider controls the target share of total activity owned by the top X% of users (where X is the super-sharer percentage). Both power-law and log-normal distributions are analytically calibrated to produce the same top-X% share at each slider position, so switching distributions does not change the headline concentration statistic.</p>
+    <p style="margin:0 0 0;">Power-law uses a Pareto distribution; log-normal uses a two-parameter log-normal. Equal activity assigns identical browsing volume to all users.</p>
+
+    <p style="margin:1rem 0 .25rem; font-weight:500; color:var(--color-text-primary);">Reference</p>
+    <p style="margin:0;">Ozturan, B. (2026). Measuring Online Partisan Segregation: Weighting, Granularity, and Genuine Signal. NIO Working Paper. &nbsp;&middot;&nbsp; Gentzkow, M. &amp; Shapiro, J.M. (2011). Ideological segregation online and offline. <i>QJE</i> 126(4).</p>
+  </div>
+</details>
+
 <h2 class="sr-only">Interactive explorer of the volume-person weighting gap and the source-to-user fragmentation artifact.</h2>
 
 <div style="padding: 0.25rem 0 0;">
 
+<!-- ── WEIGHTING ARTIFACT ─────────────────────────────────────────── -->
 <div style="font-size:12px; color:var(--color-text-tertiary); margin-bottom:8px;">Weighting artifact &middot; abundant data per source</div>
 
 <div style="display:flex; gap:8px; margin-bottom:1.25rem; flex-wrap:wrap;">
   <button id="d-power" style="flex:1; min-width:120px;">Power-law activity</button>
-  <button id="d-logn" style="flex:1; min-width:120px;">Lognormal activity</button>
+  <button id="d-logn"  style="flex:1; min-width:120px;">Lognormal activity</button>
   <button id="d-equal" style="flex:1; min-width:120px;">Equal activity</button>
 </div>
 
@@ -64,7 +118,7 @@ b{font-weight:500}
   <div>
     <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--color-text-secondary); margin-bottom:4px;">
       <span>Concentration of activity</span><span id="o-conc" style="color:var(--color-text-primary); font-weight:500;"></span></div>
-    <input type="range" id="s-conc" min="0" max="100" value="70" step="1" />
+    <input type="range" id="s-conc" min="0" max="100" value="55" step="1" />
   </div>
   <div>
     <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--color-text-secondary); margin-bottom:4px;">
@@ -89,16 +143,13 @@ b{font-weight:500}
 </div>
 
 <div id="ref-scale" style="margin-bottom:1.25rem;">
-  <div style="font-size:11px; color:var(--color-text-tertiary); margin-bottom:6px;">Interpretation scales (anchored to equivalent underlying sorting across metrics)</div>
-
+  <div style="font-size:11px; color:var(--color-text-tertiary); margin-bottom:6px;">Interpretation scales</div>
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
     <span style="font-size:11px; color:var(--color-text-secondary); min-width:120px;">Theil H</span>
     <div style="flex:1;">
       <div style="display:flex; height:6px; border-radius:3px; overflow:hidden;">
-        <div style="flex:5; background:#3a9e6e;"></div>
-        <div style="flex:10; background:#7ab648;"></div>
-        <div style="flex:15; background:#d4a017;"></div>
-        <div style="flex:20; background:#d06830;"></div>
+        <div style="flex:5; background:#3a9e6e;"></div><div style="flex:10; background:#7ab648;"></div>
+        <div style="flex:15; background:#d4a017;"></div><div style="flex:20; background:#d06830;"></div>
         <div style="flex:50; background:#a03030;"></div>
       </div>
       <div style="display:flex; font-size:9px; color:var(--color-text-tertiary); margin-top:1px;">
@@ -106,15 +157,12 @@ b{font-weight:500}
       </div>
     </div>
   </div>
-
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
     <span style="font-size:11px; color:var(--color-text-secondary); min-width:120px;">Gentzkow-Shapiro S</span>
     <div style="flex:1;">
       <div style="display:flex; height:6px; border-radius:3px; overflow:hidden;">
-        <div style="flex:5; background:#3a9e6e;"></div>
-        <div style="flex:10; background:#7ab648;"></div>
-        <div style="flex:20; background:#d4a017;"></div>
-        <div style="flex:25; background:#d06830;"></div>
+        <div style="flex:5; background:#3a9e6e;"></div><div style="flex:10; background:#7ab648;"></div>
+        <div style="flex:20; background:#d4a017;"></div><div style="flex:25; background:#d06830;"></div>
         <div style="flex:40; background:#a03030;"></div>
       </div>
       <div style="display:flex; font-size:9px; color:var(--color-text-tertiary); margin-top:1px;">
@@ -122,15 +170,12 @@ b{font-weight:500}
       </div>
     </div>
   </div>
-
   <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px;">
     <span style="font-size:11px; color:var(--color-text-secondary); min-width:120px;">Dissimilarity D</span>
     <div style="flex:1;">
       <div style="display:flex; height:6px; border-radius:3px; overflow:hidden;">
-        <div style="flex:20; background:#3a9e6e;"></div>
-        <div style="flex:20; background:#7ab648;"></div>
-        <div style="flex:20; background:#d4a017;"></div>
-        <div style="flex:20; background:#d06830;"></div>
+        <div style="flex:20; background:#3a9e6e;"></div><div style="flex:20; background:#7ab648;"></div>
+        <div style="flex:20; background:#d4a017;"></div><div style="flex:20; background:#d06830;"></div>
         <div style="flex:20; background:#a03030;"></div>
       </div>
       <div style="display:flex; font-size:9px; color:var(--color-text-tertiary); margin-top:1px;">
@@ -138,99 +183,194 @@ b{font-weight:500}
       </div>
     </div>
   </div>
+</div>
 
-  <div style="display:flex; justify-content:center; gap:16px; font-size:10px; color:var(--color-text-secondary); margin-top:4px;">
-    <span><span style="display:inline-block;width:8px;height:8px;background:#3a9e6e;border-radius:2px;vertical-align:-1px;margin-right:3px;"></span>negligible</span>
-    <span><span style="display:inline-block;width:8px;height:8px;background:#7ab648;border-radius:2px;vertical-align:-1px;margin-right:3px;"></span>low</span>
-    <span><span style="display:inline-block;width:8px;height:8px;background:#d4a017;border-radius:2px;vertical-align:-1px;margin-right:3px;"></span>moderate</span>
-    <span><span style="display:inline-block;width:8px;height:8px;background:#d06830;border-radius:2px;vertical-align:-1px;margin-right:3px;"></span>high</span>
-    <span><span style="display:inline-block;width:8px;height:8px;background:#a03030;border-radius:2px;vertical-align:-1px;margin-right:3px;"></span>very high</span>
+<div id="metrics" style="margin-bottom:1.25rem;"></div>
+<div id="takeaway" style="font-size:13px; color:var(--color-text-secondary); background:var(--color-background-secondary);
+  border-radius:var(--border-radius-lg); padding:.75rem 1rem; margin-bottom:2rem;"></div>
+
+<!-- ── FRAGMENTATION ARTIFACT ─────────────────────────────────────── -->
+<div style="font-size:12px; color:var(--color-text-tertiary); margin-bottom:8px;">Fragmentation artifact &middot; person-weighted level vs sources per user</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px 24px; margin-bottom:1rem;">
+  <div>
+    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--color-text-secondary); margin-bottom:4px;">
+      <span>Sources per user &nbsp; S/N</span><span id="o-sn" style="color:var(--color-text-primary); font-weight:500;"></span></div>
+    <input type="range" id="s-sn" min="0" max="100" value="20" step="1" />
+  </div>
+  <div>
+    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--color-text-secondary); margin-bottom:4px;">
+      <span>True underlying homophily</span><span id="o-fh" style="color:#534ab7; font-weight:500;"></span></div>
+    <input type="range" id="s-fh" min="0" max="100" value="50" step="1" />
+    <p class="panel-note">Independent of the weighting panel controls above.</p>
   </div>
 </div>
 
-<div id="metrics"></div>
-
-<p id="takeaway" style="margin:1.25rem 0 0; font-size:14px; padding:12px 14px; border-radius:var(--border-radius-md); background:var(--color-background-info); color:var(--color-text-info);"></p>
-
-<div style="border-top:0.5px solid var(--color-border-tertiary); margin:1.75rem 0 1.25rem;"></div>
-
-<div style="font-size:12px; color:var(--color-text-tertiary); margin-bottom:8px;">Fragmentation artifact &middot; person-weighted level vs sources per user</div>
-
-<div style="margin-bottom:0.75rem;">
-  <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--color-text-secondary); margin-bottom:4px;">
-    <span>Sources per user&nbsp; S/N</span><span id="o-sn" style="color:var(--color-text-primary); font-weight:500;"></span></div>
-  <input type="range" id="s-sn" min="0" max="100" value="20" step="1" />
-</div>
+<p class="panel-note" style="margin-bottom:8px;">Curve simulated with 3,000 users. Shows how person-weighted Theil inflates as sources per user rises, at fixed homophily. Qualitative shape is robust; absolute levels depend on panel size.</p>
 
 <svg id="frag" viewBox="0 0 460 175" style="width:100%; height:auto;" role="img" aria-label="Measured segregation level versus sources per user">
-  <line x1="42" y1="152" x2="448" y2="152" stroke="var(--color-border-secondary)" stroke-width="1"/>
-  <line x1="42" y1="10" x2="42" y2="152" stroke="var(--color-border-secondary)" stroke-width="1"/>
-  <text x="36" y="155" text-anchor="end" style="font-size:9px; fill:var(--color-text-tertiary);">0</text>
-  <text x="36" y="85" text-anchor="end" style="font-size:9px; fill:var(--color-text-tertiary);">0.5</text>
-  <text x="36" y="16" text-anchor="end" style="font-size:9px; fill:var(--color-text-tertiary);">1</text>
-  <line id="snone" x1="0" y1="10" x2="0" y2="152" stroke="var(--color-text-tertiary)" stroke-width="1" stroke-dasharray="3 3"/>
-  <text id="snone-lbl" x="0" y="166" text-anchor="middle" style="font-size:8.5px; fill:var(--color-text-tertiary);">S/N = 1</text>
-  <polyline id="fc-T" fill="none" stroke="#534ab7" stroke-width="2" points=""/>
-  <polyline id="fc-S" fill="none" stroke="#d4537e" stroke-width="2" points=""/>
-  <polyline id="fc-D" fill="none" stroke="#ba7517" stroke-width="2" points=""/>
-  <line id="fm" x1="0" y1="10" x2="0" y2="152" stroke="var(--color-text-secondary)" stroke-width="1.5"/>
-  <circle id="fd-T" r="3.5" fill="#534ab7"/>
-  <circle id="fd-S" r="3.5" fill="#d4537e"/>
-  <circle id="fd-D" r="3.5" fill="#ba7517"/>
+  <line x1="42" y1="10" x2="42" y2="152" stroke="#ccc" stroke-width="1"/>
+  <line x1="42" y1="152" x2="450" y2="152" stroke="#ccc" stroke-width="1"/>
+  <text x="42" y="168" text-anchor="middle" font-size="9" fill="#8a8980">0.01</text>
+  <text x="123" y="168" text-anchor="middle" font-size="9" fill="#8a8980">0.1</text>
+  <text x="204" y="168" text-anchor="middle" font-size="9" fill="#8a8980">1</text>
+  <text x="285" y="168" text-anchor="middle" font-size="9" fill="#8a8980">10</text>
+  <text x="366" y="168" text-anchor="middle" font-size="9" fill="#8a8980">100</text>
+  <text x="447" y="168" text-anchor="middle" font-size="9" fill="#8a8980">1000</text>
+  <text x="246" y="175" text-anchor="middle" font-size="9" fill="#8a8980">sources per user (S/N)</text>
+  <text x="8" y="152" text-anchor="middle" font-size="9" fill="#8a8980">0</text>
+  <text x="8" y="81"  text-anchor="middle" font-size="9" fill="#8a8980">.5</text>
+  <text x="8" y="10"  text-anchor="middle" font-size="9" fill="#8a8980">1</text>
+  <line id="snone" x1="204" y1="10" x2="204" y2="152" stroke="#8a8980" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <text id="snone-lbl" x="204" y="8" text-anchor="middle" font-size="8" fill="#8a8980">S/N=1</text>
+  <polyline id="fc-T" points="" fill="none" stroke="#d85a30" stroke-width="2"/>
+  <polyline id="fc-S" points="" fill="none" stroke="#534ab7" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polyline id="fc-D" points="" fill="none" stroke="#1d9e75" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line id="fm" x1="204" y1="10" x2="204" y2="152" stroke="#1a1a1a" stroke-width="1" stroke-dasharray="4,2"/>
+  <circle id="fd-T" cx="204" cy="81" r="4" fill="#d85a30"/>
+  <circle id="fd-S" cx="204" cy="81" r="3" fill="#534ab7"/>
+  <circle id="fd-D" cx="204" cy="81" r="3" fill="#1d9e75"/>
+  <text x="52" y="22" font-size="9" fill="#d85a30">— Theil H</text>
+  <text x="52" y="33" font-size="9" fill="#534ab7">-- GS score S</text>
+  <text x="52" y="44" font-size="9" fill="#1d9e75">.. Dissimilarity D</text>
 </svg>
 
-<div style="display:flex; gap:16px; font-size:12px; color:var(--color-text-secondary); margin-top:2px; flex-wrap:wrap;">
-  <span><span style="display:inline-block;width:10px;height:10px;background:#534ab7;border-radius:2px;vertical-align:-1px;margin-right:5px;"></span>Theil H</span>
-  <span><span style="display:inline-block;width:10px;height:10px;background:#d4537e;border-radius:2px;vertical-align:-1px;margin-right:5px;"></span>GS S / isolation</span>
-  <span><span style="display:inline-block;width:10px;height:10px;background:#ba7517;border-radius:2px;vertical-align:-1px;margin-right:5px;"></span>Dissimilarity D</span>
-</div>
-
-<p id="frag-read" style="margin:0.9rem 0 0; font-size:14px; padding:12px 14px; border-radius:var(--border-radius-md); background:var(--color-background-secondary); color:var(--color-text-primary);"></p>
+<p id="frag-read" style="font-size:13px; color:var(--color-text-secondary); margin-top:.5rem; min-height:2.5em;"></p>
 
 </div>
 
 <script>
 (function(){
   var dist="power";
+
+  // ── RNG ──────────────────────────────────────────────────────────
   function mb(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
   function logMap(v,lo,hi){return Math.round(lo*Math.pow(hi/lo,v/100));}
   function g(id){return document.getElementById(id);}
   function binEnt(P){if(P<=0||P>=1)return 0;return -(P*Math.log(P)+(1-P)*Math.log(1-P));}
   function theil(h){return 1-binEnt(0.5+0.5*h)/Math.LN2;}
 
-  function genActivity(conc,n,R){
+  // ── PROBIT (inverse normal CDF) ──────────────────────────────────
+  function probit(p){
+    p=Math.max(1e-9,Math.min(1-1e-9,p));
+    var a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+    var b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+    var c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+    var d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+    var pl=0.02425,ph=1-pl,q,r;
+    if(p<pl){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+    if(p<=ph){q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+    q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+
+  // ── OPTION B: slider → target top-10% share → distribution param ─
+  // slider 0-100 maps to phi10 in [0.12, 0.95]
+  function sliderToPhi10(v){return 0.12+0.83*(v/100);}
+
+  function genActivity(sliderVal,n,R,fs){
     var x=new Float64Array(n),i;
     if(dist==="equal"){for(i=0;i<n;i++)x[i]=1;return x;}
-    if(dist==="power"){var al=3.6-2.2*(conc/100);for(i=0;i<n;i++){var u=R();x[i]=Math.pow(1-u*0.999999,-1/(al-1));}return x;}
-    var sg=0.15+3.0*(conc/100);
+    // target: top fs fraction owns phi share, where phi = sliderToPhi10(sliderVal)
+    // same target regardless of distribution type
+    var phi=sliderToPhi10(sliderVal);
+    var p=Math.max(0.001,Math.min(0.5,fs||0.1)); // super-sharer fraction
+    if(dist==="power"){
+      // Pareto: top p fraction owns phi => alpha = 1/(1 - log(phi)/log(p))
+      var al=1/(1-Math.log(phi)/Math.log(p));
+      al=Math.max(1.01,al);
+      for(i=0;i<n;i++){var u=R();x[i]=Math.pow(1-u*0.999999,-1/(al-1));}
+      return x;
+    }
+    // lognormal: top p fraction owns phi => sigma = probit(1-p) - probit(1-phi)
+    var sg=probit(1-p)-probit(1-phi);
+    sg=Math.max(0.01,Math.abs(sg));
     for(i=0;i<n;i++){var u1=R(),u2=R();x[i]=Math.exp(sg*Math.sqrt(-2*Math.log(u1+1e-12))*Math.cos(6.28318530718*u2));}
     return x;
   }
+
   function gini(s,total){var n=s.length,acc=0;for(var i=0;i<n;i++)acc+=(2*(i+1)-n-1)*s[i];return acc/(n*total);}
 
   function curConc(){return +g("s-conc").value;}
   function curFs(){return (+g("s-fs").value)/10/100;}
   function curHs(){return (+g("s-hs").value)/100;}
   function curHg(){return (+g("s-hg").value)/100;}
+  function curFH(){return (+g("s-fh").value)/100;}  // fragmentation panel homophily
+
+  // ── SHARED METRICS HELPER ─────────────────────────────────────────
+  function metricsFromMap(per){
+    var C=0,L=0,Ttot=0;
+    per.forEach(function(e){C+=e[0];L+=e[1];Ttot+=e[0]+e[1];});
+    if(C<=0||L<=0)return{D:0,S:0,T:0};
+    var Pc=C/(C+L),Pl=L/(C+L),E=-(Pc*Math.log(Pc)+Pl*Math.log(Pl));
+    var D=0,S=0,Th=0;
+    per.forEach(function(e){var c=e[0],l=e[1],t=c+l;if(t<=0)return;
+      D+=Math.abs(c/C-l/L);var cs=c/t;S+=(c/C)*cs-(l/L)*cs;Th+=(t/Ttot)*(E-binEnt(cs));});
+    return{D:0.5*D,S:S,T:E>0?Th/E:0};
+  }
+
+  // ── WEIGHTING PANEL SIMULATION ────────────────────────────────────
+  var WSIM=2000, WMU=18, WSN=0.1;  // safe S/N so fragmentation is negligible
+  function computeWeighting(hS,hG,fs,conc,n){
+    var R=mb(55667788),raw=genActivity(conc,n,R,fs),i,m=0;
+    for(i=0;i<n;i++)m+=raw[i]; m/=n;
+    var act=new Int32Array(n);for(i=0;i<n;i++)act[i]=Math.max(1,Math.round(raw[i]*WMU/m));
+    var S=Math.max(4,Math.round(WSN*n)),half=Math.floor(S/2);
+    var nSuper=Math.max(1,Math.round(fs*n));
+    // rank users by activity: top nSuper are super-sharers regardless of group
+    var ranked=Array.from({length:n},function(_,i){return i;})
+      .sort(function(a,b){return act[b]-act[a];});
+    var isSuper=new Uint8Array(n);
+    for(i=0;i<nSuper;i++)isSuper[ranked[i]]=1;
+    var volMap=new Map(),perMap=new Map();
+    for(i=0;i<n;i++){
+      var v=act[i],gg=i<n/2?0:1,pw=1/v;
+      var H=isSuper[i]?hS:hG;
+      for(var j=0;j<v;j++){
+        var src;
+        if(R()<H){
+          var side=(gg===0)?0:1;
+          src=side*half+Math.floor(R()*half);
+        } else {
+          src=Math.floor(R()*S);
+        }
+        var ev=volMap.get(src);if(!ev){ev=[0,0];volMap.set(src,ev);}
+        if(gg===0)ev[0]+=1;else ev[1]+=1;
+        var ep=perMap.get(src);if(!ep){ep=[0,0];perMap.set(src,ep);}
+        if(gg===0)ep[0]+=pw;else ep[1]+=pw;
+      }
+    }
+    return{vol:metricsFromMap(volMap),per:metricsFromMap(perMap)};
+  }
 
   function compute(){
     var N=logMap(+g("s-n").value,1000,1000000),conc=curConc(),fs=curFs(),hS=curHs(),hG=curHg();
-    var n=Math.min(N,40000),R=mb(987654321);
-    var arr=Array.prototype.slice.call(genActivity(conc,n,R)).sort(function(a,b){return a-b;});
+    var n=Math.min(N,WSIM);
+    // compute Gini and phi from sorted activity array (for display only)
+    var R0=mb(987654321);
+    var arr=Array.prototype.slice.call(genActivity(conc,n,R0,fs)).sort(function(a,b){return a-b;});
     var total=0,i;for(i=0;i<n;i++)total+=arr[i];
     var k=Math.max(1,Math.round(fs*n)),topSum=0;for(i=n-k;i<n;i++)topSum+=arr[i];
     var phi=topSum/total,G=gini(arr,total);
+    // simulate actual browsing and compute Theil from source masses
+    var sim=computeWeighting(hS,hG,fs,conc,n);
+    var vol=sim.vol,per=sim.per;
+    // keep hev/hep for display labels only
     var hev=phi*hS+(1-phi)*hG, hep=fs*hS+(1-fs)*hG;
-    var vol={D:hev,S:hev*hev,T:theil(hev)}, per={D:hep,S:hep*hep,T:theil(hep)};
 
-    g("o-n").textContent=N.toLocaleString();
-    g("o-conc").textContent=dist==="equal"?"n/a":(conc+"%");
+    var phi10=sliderToPhi10(conc);
+    g("o-n").textContent=N>=1e6?"1M":N>=1e3?(N/1000).toFixed(0)+"k":N;
+    g("o-conc").textContent=dist==="equal"?"—":Math.round(sliderToPhi10(conc)*100)+"%";
     g("o-fs").textContent=(fs*100).toFixed(fs*100<1?1:0)+"%";
-    g("o-hs").textContent=hS.toFixed(2); g("o-hg").textContent=hG.toFixed(2);
-    g("r-headline").innerHTML="Top <b>"+(fs*100).toFixed(fs*100<1?1:0)+"%</b> of users own <b>"+Math.round(phi*100)+"%</b> of all activity";
-    g("r-gini").textContent=G.toFixed(2); g("r-hev").textContent=hev.toFixed(2); g("r-hep").textContent=hep.toFixed(2);
+    g("o-hs").textContent=Math.round(hS*100)+"%";
+    g("o-hg").textContent=Math.round(hG*100)+"%";
+    g("r-gini").textContent=G.toFixed(2);
+    g("r-hev").textContent=Math.round(hev*100)+"%";
+    g("r-hep").textContent=Math.round(hep*100)+"%";
+    var phi_target=dist==="equal"?Math.round(fs*100):Math.round(sliderToPhi10(conc)*100);
+    g("r-headline").innerHTML="Top <b>"+(fs*100).toFixed(fs*100<1?1:0)+"%</b> of users own <b>"+phi_target+"%</b> of all activity";
 
-    var rows=[["Theil H",vol.T,per.T,levelT],["Gentzkow-Shapiro S",vol.S,per.S,levelS],["Dissimilarity D",vol.D,per.D,levelD]],html="";
+    var rows=[["Theil H",vol.T,per.T,levelT],["GS score S",vol.S,per.S,levelS],["Dissimilarity D",vol.D,per.D,levelD]];
+    var html="";
     rows.forEach(function(r){var gp=r[1]-r[2];
       html+="<div style='display:grid; grid-template-columns:145px 1fr auto; align-items:center; gap:12px; margin-bottom:10px;'>"+
         "<div style='font-size:13px; color:var(--color-text-secondary);'>"+r[0]+"</div><div>"+bar("#d85a30",r[1],r[3])+bar("#1d9e75",r[2],r[3])+"</div>"+
@@ -241,73 +381,54 @@ b{font-weight:500}
 
     var mg=vol.T-per.T,t=g("takeaway");
     var lvV=levelT(vol.T),lvP=levelT(per.T);
-    if(dist==="equal")t.textContent="Everyone is equally active, so there are no super-sharers to over-weight. Volume and person agree exactly, whatever the homophily gap.";
-    else if(Math.abs(hS-hG)<0.03)t.textContent="Super-sharers are no more sorted than everyone else, so volume and person agree. Concentration alone manufactures nothing. Both read as \u201c"+lvP.t+" segregation.\u201d";
+    if(dist==="equal")t.textContent="Everyone is equally active, so there are no super-sharers to over-weight. Volume and person agree exactly.";
+    else if(Math.abs(hS-hG)<0.03)t.textContent="Super-sharers are no more sorted than everyone else, so volume and person agree. Concentration alone manufactures nothing.";
     else if(lvV.t!==lvP.t){
-      t.innerHTML="<b>The same population reads as two different stories.</b> Volume-weighted Theil ("+vol.T.toFixed(2)+") says <span style='color:"+lvV.c+";font-weight:500'>"+lvV.t+" segregation</span>. Person-weighted Theil ("+per.T.toFixed(2)+") says <span style='color:"+lvP.c+";font-weight:500'>"+lvP.t+" segregation</span>. The gap of "+mg.toFixed(2)+" is entirely manufactured by the "+Math.round(phi*100)+"% of clicks owned by the more-sorted super-sharers.";
+      t.innerHTML="<b>The same population reads as two different stories.</b> Volume-weighted Theil ("+vol.T.toFixed(2)+") says <span style='color:"+lvV.c+";font-weight:500'>"+lvV.t+" segregation</span>. Person-weighted Theil ("+per.T.toFixed(2)+") says <span style='color:"+lvP.c+";font-weight:500'>"+lvP.t+" segregation</span>. The gap of "+mg.toFixed(2)+" is manufactured by the "+Math.round(phi*100)+"% of clicks owned by the more-sorted super-sharers.";
     } else {
       t.textContent="Both weightings fall in the \u201c"+lvP.t+"\u201d range, but volume reads "+vol.T.toFixed(2)+" vs person "+per.T.toFixed(2)+". The gap ("+mg.toFixed(2)+") overstates the level by "+(per.T>0.01?(vol.T/per.T).toFixed(1)+"\u00d7":"a large factor")+", driven by the "+Math.round(phi*100)+"% of clicks from the more-sorted super-sharers.";
     }
   }
-  function levelT(v){
-    if(v<0.05)return {t:"negligible",c:"#3a9e6e"};
-    if(v<0.15)return {t:"low",c:"#7ab648"};
-    if(v<0.30)return {t:"moderate",c:"#d4a017"};
-    if(v<0.50)return {t:"high",c:"#d06830"};
-    return {t:"very high",c:"#a03030"};
-  }
-  function levelS(v){
-    if(v<0.05)return {t:"negligible",c:"#3a9e6e"};
-    if(v<0.15)return {t:"low",c:"#7ab648"};
-    if(v<0.35)return {t:"moderate",c:"#d4a017"};
-    if(v<0.60)return {t:"high",c:"#d06830"};
-    return {t:"very high",c:"#a03030"};
-  }
-  function levelD(v){
-    if(v<0.20)return {t:"negligible",c:"#3a9e6e"};
-    if(v<0.40)return {t:"low",c:"#7ab648"};
-    if(v<0.60)return {t:"moderate",c:"#d4a017"};
-    if(v<0.80)return {t:"high",c:"#d06830"};
-    return {t:"very high",c:"#a03030"};
-  }
+
+  function levelT(v){if(v<0.05)return{t:"negligible",c:"#3a9e6e"};if(v<0.15)return{t:"low",c:"#7ab648"};if(v<0.30)return{t:"moderate",c:"#d4a017"};if(v<0.50)return{t:"high",c:"#d06830"};return{t:"very high",c:"#a03030"};}
+  function levelS(v){if(v<0.05)return{t:"negligible",c:"#3a9e6e"};if(v<0.15)return{t:"low",c:"#7ab648"};if(v<0.35)return{t:"moderate",c:"#d4a017"};if(v<0.60)return{t:"high",c:"#d06830"};return{t:"very high",c:"#a03030"};}
+  function levelD(v){if(v<0.20)return{t:"negligible",c:"#3a9e6e"};if(v<0.40)return{t:"low",c:"#7ab648"};if(v<0.60)return{t:"moderate",c:"#d4a017"};if(v<0.80)return{t:"high",c:"#d06830"};return{t:"very high",c:"#a03030"};}
   function bar(color,v,lvfn){var w=Math.max(0,Math.min(1,v))*100;var lv=lvfn(v);
     return "<div style='display:flex;align-items:center;gap:8px;margin:3px 0;'><div style='flex:1;height:12px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;'><div style='width:"+w.toFixed(1)+"%;height:100%;background:"+color+";border-radius:3px;'></div></div><span style='font-size:12px;font-weight:500;min-width:34px;color:"+color+"'>"+v.toFixed(2)+"</span><span style='font-size:11px;font-weight:500;color:"+lv.c+";min-width:65px;'>"+lv.t+"</span></div>";}
 
+  // ── FRAGMENTATION SIMULATION (3000 users, fixed) ──────────────────
   var MU=18, NSIM=3000;
-  function metricsFromMap(per){
-    var C=0,L=0,Ttot=0;
-    per.forEach(function(e){C+=e[0];L+=e[1];Ttot+=e[0]+e[1];});
-    if(C<=0||L<=0)return {D:0,S:0,T:0};
-    var Pc=C/(C+L),Pl=L/(C+L),E=-(Pc*Math.log(Pc)+Pl*Math.log(Pl));
-    var D=0,S=0,Th=0;
-    per.forEach(function(e){var c=e[0],l=e[1],t=c+l;if(t<=0)return;
-      D+=Math.abs(c/C-l/L);var cs=c/t;S+=(c/C)*cs-(l/L)*cs;Th+=(t/Ttot)*(E-binEnt(cs));});
-    return {D:0.5*D, S:S, T:E>0?Th/E:0};
-  }
+
   function simLevel(sn,H){
     var R=mb(13579),raw=genActivity(curConc(),NSIM,R),i,m=0;
     for(i=0;i<NSIM;i++)m+=raw[i]; m/=NSIM;
     var act=new Int32Array(NSIM);for(i=0;i<NSIM;i++)act[i]=Math.max(1,Math.round(raw[i]*MU/m));
-    var S=Math.max(2,Math.round(sn*NSIM)),half=Math.floor(S/2),ownp=0.5+0.5*H,per=new Map();
+    var S=Math.max(2,Math.round(sn*NSIM)),half=Math.floor(S/2),per=new Map();
     for(i=0;i<NSIM;i++){var v=act[i],gg=i<NSIM/2?0:1,pw=1/v;
-      for(var j=0;j<v;j++){var own=R()<ownp,side=(gg===0)?(own?0:1):(own?1:0),src=side*half+Math.floor(R()*half);
+      for(var j=0;j<v;j++){
+        var src;
+        if(R()<H){var side2=(gg===0)?0:1;src=side2*half+Math.floor(R()*half);}
+        else{src=Math.floor(R()*S);}
         var e=per.get(src);if(!e){e=[0,0];per.set(src,e);}if(gg===0)e[0]+=pw;else e[1]+=pw;}}
     return metricsFromMap(per);
   }
 
-  var SNX=[0.01,0.03,0.1,0.3,1,3,10,30,100,1000], curve=null;
+  var SNX=[0.01,0.03,0.1,0.3,1,3,10,30,100,1000],curve=null;
   function L10(v){return Math.log(v)/Math.LN2/3.32192809;}
   function xpix(sn){return 42+(L10(sn)+2)/5*406;}
   function ypix(v){return 152-Math.max(0,Math.min(1,v))*142;}
   function snFromSlider(){return Math.pow(10,-2+(+g("s-sn").value)/100*5);}
 
   function recomputeCurve(){
-    var H=curFs()*curHs()+(1-curFs())*curHg();
+    // uses independent homophily slider for fragmentation panel
+    var H=curFH();
+    g("o-fh").textContent=Math.round(H*100)+"%";
     var T=[],S=[],D=[];
     for(var i=0;i<SNX.length;i++){var r=simLevel(SNX[i],H);T.push(r.T);S.push(r.S);D.push(r.D);}
     curve={H:H,T:T,S:S,D:D};
     drawCurve();
   }
+
   function poly(vals){var p="";for(var i=0;i<SNX.length;i++)p+=xpix(SNX[i]).toFixed(1)+","+ypix(vals[i]).toFixed(1)+" ";return p.trim();}
   function drawCurve(){
     if(!curve)return;
@@ -346,12 +467,14 @@ b{font-weight:500}
       if(k===d){b.style.borderColor="var(--color-border-info)";b.style.background="var(--color-background-info)";b.style.color="var(--color-text-info)";}
       else{b.style.borderColor="";b.style.background="";b.style.color="";}});
     g("s-conc").disabled=(d==="equal");compute();scheduleCurve();}
+
   g("d-power").onclick=function(){setDist("power");};
   g("d-logn").onclick=function(){setDist("logn");};
   g("d-equal").onclick=function(){setDist("equal");};
   ["s-conc","s-fs","s-hs","s-hg"].forEach(function(id){g(id).addEventListener("input",function(){compute();scheduleCurve();});});
   g("s-n").addEventListener("input",compute);
   g("s-sn").addEventListener("input",markerUpdate);
+  g("s-fh").addEventListener("input",function(){scheduleCurve();});
   setDist("power");
   recomputeCurve();
 })();
